@@ -15,11 +15,11 @@ intents = discord.Intents.default()
 intents.members = True
 intents.guilds = True
 
-#bot
-bot = discord.Bot(debug_guilds=[config.guild_id], intents=intents)
-
 #config
 config = load_config()
+
+#bot
+bot = discord.Bot(debug_guilds=[config.guild_id], intents=intents)
 
 @bot.event
 async def on_ready():
@@ -79,7 +79,7 @@ async def on_ready():
                 #log we are giving them the role
                 s.write(str(datetime.datetime.now()) + " - " + str(member) + " doesn't have VIP. Assigning.\n")
 
-                await member.add_roles(vip)
+                #await member.add_roles(vip)
                 try:
                     await member.send("Saw that you didn't have VIP on the TF2Maps discord server. I went ahead and gave you the role. Thanks for supporting the community!")
                 except:
