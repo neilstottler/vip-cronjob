@@ -56,7 +56,10 @@ async def on_ready():
             await member.remove_roles(vip)
 
             #send them a DM notifying if the expiration
-            await member.send("Your VIP status has expired. Upgrade to VIP https://tf2maps.net/account/upgrades")
+            try:
+                await member.send("Your VIP status has expired. Upgrade to VIP https://tf2maps.net/account/upgrades")
+            except:
+                s.write(str(datetime.datetime.now()) + " - Cannot send notification to: " + str(member) + "\n")
 
     #lastly check for any members in the discord who are vip on the site but do not have it in the discord, assuming their profile is connected
     query = "SELECT provider_key FROM xf_user INNER JOIN xf_user_connected_account ON xf_user.user_id = xf_user_connected_account.user_id WHERE find_in_set(19, secondary_group_ids) AND provider = 'th_cap_discord'"
@@ -77,7 +80,10 @@ async def on_ready():
                 s.write(str(datetime.datetime.now()) + " - " + str(member) + " doesn't have VIP. Assigning.\n")
 
                 await member.add_roles(vip)
-                await member.send("Saw that you didn't have VIP on the TF2Maps discord server. I went ahead and gave you the role. Thanks for supporting the community!")
+                try:
+                    await member.send("Saw that you didn't have VIP on the TF2Maps discord server. I went ahead and gave you the role. Thanks for supporting the community!")
+                except:
+                    s.write(str(datetime.datetime.now()) + " - Cannot send notification to: " + str(member) + "\n")
 
 
     s.write(str(datetime.datetime.now()) + " - Cronjob ended.\n")
