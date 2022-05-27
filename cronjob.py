@@ -1,6 +1,7 @@
 # Std Lib Imports
 import os
 import datetime
+import sys
 
 # 3rd Party Imports
 import discord
@@ -15,7 +16,8 @@ intents.members = True
 intents.guilds = True
 
 #bot
-bot = discord.Bot(debug_guilds=[config.guild_id], intents=intents)
+#bot = discord.Bot(debug_guilds=[config.guild_id], intents=intents)
+bot = discord.Bot(debug_guilds=[832585231969026059], intents=intents)
 
 #config
 config = load_config()
@@ -24,12 +26,13 @@ config = load_config()
 async def on_ready():
 
     #create log file
-    f = open("cronjob/logs/log.txt", "a")
-    f.write(str(datetime.datetime.now()) + " - Cronjob started.\n")
+    s = sys.stdout
+    s.write(str(datetime.datetime.now()) + " - Cronjob started.\n")
 
-    print(f"{bot.user} cronjob is running.")
+    print(str(datetime.datetime.now()) + f" - {bot.user} cronjob is running.")
 
-    guild = bot.get_guild(config.guild_id)
+    #guild = bot.get_guild(config.guild_id)
+    guild = bot.get_guild(832585231969026059)
 
     #get the vip object
     vip = discord.utils.get(guild.roles, name="VIP")
@@ -38,29 +41,48 @@ async def on_ready():
     database = databases.Database(config.databases.tf2maps_site)
     await database.connect()
 
-    #print the members under that role
+    #check the members under that role
     for member in vip.members:
-        current_user = member.id
         
         #check DB
         query = "SELECT provider_key FROM xf_user INNER JOIN xf_user_connected_account ON xf_user.user_id = xf_user_connected_account.user_id WHERE find_in_set(19, secondary_group_ids) AND provider = 'th_cap_discord' AND provider_key = :provider_key;"
         values = {"provider_key": member.id}
         result = await database.fetch_one(query=query, values=values)
-        
+
         #if not in query remove vip role
         if not result:
 
-            f.write(str(datetime.datetime.now()) + " - Vip expired for: " + str(member) + "\n")
-            #send them a DM notifying if the expiration
-            await member.send("Your VIP status has expired. Upgrade to VIP https://tf2maps.net/account/upgrades")
+            s.write(str(datetime.datetime.now()) + " - Vip expired for: " + str(member) + "\n")
 
             #remove role
             await member.remove_roles(vip)
-            print("We need to remove the VIP role for: " + str(member))
 
-    f.write(str(datetime.datetime.now()) + " - Cronjob ended.\n")
-    print("Cronjob ended.")
-    f.close()
+            #send them a DM notifying if the expiration
+            await member.send("Your VIP status has expired. Upgrade to VIP https://tf2maps.net/account/upgrades")
+
+    #lastly check for any members in the discord who are vip on the site but do not have it in the discord, assuming their profile is connected
+    query = "SELECT provider_key FROM xf_user INNER JOIN xf_user_connected_account ON xf_user.user_id = xf_user_connected_account.user_id WHERE find_in_set(19, secondary_group_ids) AND provider = 'th_cap_discord'"
+    result = await database.fetch_all(query=query)
+    for linked_id in result:
+
+        member = guild.get_member(int(linked_id[0]))
+
+        #check if the member is even in the discord before wasting our time
+        if member:
+
+            #check if vip is part of their roles
+            if vip in member.roles:
+                #log they already have the role
+                s.write(str(datetime.datetime.now()) + " - " + str(member) + " already has VIP.\n")
+            else:
+                #log we are giving them the role
+                s.write(str(datetime.datetime.now()) + " - " + str(member) + " doesn't have VIP. Assigning.\n")
+
+                await member.add_roles(vip)
+                await member.send("Saw that you didn't have VIP on the TF2Maps discord server. I went ahead and gave you the role. Thanks for supporting the community!")
+
+
+    s.write(str(datetime.datetime.now()) + " - Cronjob ended.\n")
     os._exit(os.EX_OK)
 
 bot.run(config.bot_token)
