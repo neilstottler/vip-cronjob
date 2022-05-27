@@ -16,8 +16,7 @@ intents.members = True
 intents.guilds = True
 
 #bot
-#bot = discord.Bot(debug_guilds=[config.guild_id], intents=intents)
-bot = discord.Bot(debug_guilds=[832585231969026059], intents=intents)
+bot = discord.Bot(debug_guilds=[config.guild_id], intents=intents)
 
 #config
 config = load_config()
@@ -31,8 +30,7 @@ async def on_ready():
 
     print(str(datetime.datetime.now()) + f" - {bot.user} cronjob is running.")
 
-    #guild = bot.get_guild(config.guild_id)
-    guild = bot.get_guild(832585231969026059)
+    guild = bot.get_guild(config.guild_id)
 
     #get the vip object
     vip = discord.utils.get(guild.roles, name="VIP")
